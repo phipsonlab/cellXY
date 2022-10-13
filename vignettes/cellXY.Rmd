@@ -1,0 +1,184 @@
+---
+title: "cellXY"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{cellXY}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(cellXY)
+library(speckle)
+library(SingleCellExperiment)
+library(CellBench)
+library(limma)
+library(ggplot2)
+library(scater)
+library(patchwork)
+library(edgeR)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+
+# find male-female doublet cells 
+
+
+
+# sex label prediction 
+
+
+```
+
+We are using single cell data from the `r BiocStyle::Biocpkg("CellBench")` 
+package to illustrate how `propeller` works. This is an artificial dataset that 
+is made up of an equal mixture of 3 different cell lines. There are three 
+datasets corresponding to three different technologies: 10x genomics, CelSeq and
+DropSeq.
+
+```{r}
+sc_data <- load_sc_data()
+```
+
+The way that `propeller` is designed to be used is in the context of a designed 
+experiment where there are multiple biological replicates and multiple groups. 
+Comparing cell type proportions without biological replication should be done 
+with caution as there will be a large degree of variability in the cell type 
+proportions between samples due to technical factors (cell capture bias, 
+sampling, clustering errors), as well as biological variability. The 
+`r BiocStyle::Biocpkg("CellBench")` dataset does not have biological 
+replication, so we will create several artificial biological replicates by 
+bootstrapping the data. Bootstrapping has the advantage that it induces 
+variability between bootstrap samples by sampling with replacement. Here we will
+treat the three technologies as the groups, and create artifical biological 
+replicates within each group. Note that bootstrapping only induces sampling 
+variability between our biological replicates, which will almost certainly be 
+much smaller than biological variability we would expect to see in a real 
+dataset.
+
+The three single cell experiment objects in `sc_data` all have differing numbers
+of genes. The first step is to find all the common genes between all three 
+experiments in order to create one large dataset.
+
+```{r}
+commongenes1 <- rownames(sc_data$sc_dropseq)[rownames(sc_data$sc_dropseq) %in% 
+                                                rownames(sc_data$sc_celseq)]
+commongenes2 <-  commongenes1[commongenes1 %in% rownames(sc_data$sc_10x)]
+sce_10x <- sc_data$sc_10x[commongenes2,]
+sce_celseq <- sc_data$sc_celseq[commongenes2,] 
+sce_dropseq <- sc_data$sc_dropseq[commongenes2,] 
+dim(sce_10x)
+dim(sce_celseq)
+dim(sce_dropseq)
+table(rownames(sce_10x) == rownames(sce_celseq))
+table(rownames(sce_10x) == rownames(sce_dropseq))
+```
+
+# Bootstrap additional samples
+
+This dataset does not have any biological replicates, so we will bootstrap 
+additional samples and pretend that they are biological replicates. 
+Bootstrapping won't replicate true biological variation between samples, but we 
+will ignore that for the purpose of demonstrating how `propeller` works. Note 
+that we don't need to simulate gene expression measurements; `propeller` only 
+uses cluster information, hence we simply bootstrap the column indices of the 
+single cell count matrices.
+
+```{r}
+i.10x <- seq_len(ncol(sce_10x))
+i.celseq <- seq_len(ncol(sce_celseq))
+i.dropseq <- seq_len(ncol(sce_dropseq))
+set.seed(10)
+boot.10x <- sample(i.10x, replace=TRUE)
+boot.celseq <- sample(i.celseq, replace=TRUE)
+boot.dropseq <- sample(i.dropseq, replace=TRUE)
+sce_10x_rep2 <- sce_10x[,boot.10x]
+sce_celseq_rep2 <- sce_celseq[,boot.celseq]
+sce_dropseq_rep2 <- sce_dropseq[,boot.dropseq]
+```
+
+# Combine all SingleCellExperiment objects
+
+The `SingleCellExperiment` objects don't combine very easily, so I will create a
+new object manually, and retain only the information needed to run `propeller`.
+
+```{r}
+sample <- rep(c("S1","S2","S3","S4","S5","S6"), 
+                c(ncol(sce_10x),ncol(sce_10x_rep2),ncol(sce_celseq),
+                ncol(sce_celseq_rep2), 
+                ncol(sce_dropseq),ncol(sce_dropseq_rep2)))
+cluster <- c(sce_10x$cell_line,sce_10x_rep2$cell_line,sce_celseq$cell_line,
+                sce_celseq_rep2$cell_line,sce_dropseq$cell_line,
+                sce_dropseq_rep2$cell_line)
+group <- rep(c("10x","celseq","dropseq"),
+                c(2*ncol(sce_10x),2*ncol(sce_celseq),2*ncol(sce_dropseq)))
+allcounts <- cbind(counts(sce_10x),counts(sce_10x_rep2), 
+                    counts(sce_celseq), counts(sce_celseq_rep2),
+                    counts(sce_dropseq), counts(sce_dropseq_rep2))
+sce_all <- SingleCellExperiment(assays = list(counts = allcounts))
+sce_all$sample <- sample
+sce_all$group <- group
+sce_all$cluster <- cluster
+```
+
+# Classifying male and female cells from scRNA-seq data
+A common quality control check in bulk RNA-seq is to check the sex of the 
+samples. The simplest method to do this is to check expression of *XIST*, which 
+is the gene responsible for X-inactivation. It is highly expressed in females, 
+and not expressed in males. In experiments where the sex of the samples has not 
+been recorded, the variation due to sex can often be captured by the top 
+principal component in an MDS or PCA plot. It is important to know if the 
+samples are a mix of males and females and to take this information 
+into account in downstream analysis.
+It turns out that for single cell data, it is not a simple matter to classify
+cells as male or female. The main reason for this is that the cells are
+much more lowly sequenced compared to bulk RNA-seq samples resulting in low or 
+zero counts for many genes, including *XIST* and other X- and Y-chromosome 
+genes. Thus simply trying to classify cells as male or female based on observed 
+counts for *XIST* leave many cells unable to be classified.
+There are a few reasons for wanting to classify male and female cells. First, it
+could form part of the analysis assessing quality of the cells, and if sex is 
+not information that is easily available, it is an additional variable we can 
+predict from the gene expression. This may then inform further analysis of the 
+data, by allowing us to take sex into account in the analysis.
+We have built a classifier to predict the sex of each cell based on logistic 
+regression for human and mouse cells. The input is the matrix of counts where
+the genes are the rows and the cells are the columns. The rownames of the counts
+matrix needs to be gene symbol. The `allcounts` data object contains the counts
+for all the cells used in the `propeller` function, but the rownames are ENSEMBL
+IDs. The first step is thus converting the ENSEMBL IDs to gene symbol.
+```{r}
+allcounts[1:5,1:5]
+nc <- normCounts(allcounts, log=TRUE)
+avgexp <- rowMeans(nc)
+o <- order(avgexp, decreasing = TRUE)
+allcounts2 <- allcounts[o,]
+allcounts2[1:5,1:5]
+ann <- AnnotationDbi::select(org.Hs.eg.db, keys=rownames(allcounts2),
+                columns=c("ENSEMBL","SYMBOL"), keytype="ENSEMBL")
+m <- match(rownames(allcounts2), ann$ENSEMBL)
+symbol <- ann$SYMBOL[m]
+table(duplicated(symbol))
+allcounts2 <- allcounts2[!duplicated(symbol) & !is.na(symbol),]
+rownames(allcounts2) <- symbol[!duplicated(symbol) & !is.na(symbol)]
+table(duplicated(colnames(allcounts2)))
+colnames(allcounts2) <- paste(colnames(allcounts2),1:ncol(allcounts2), sep=".")
+table(duplicated(rownames(allcounts2)))
+```
+
+Now that the counts matrix is in the correct format we can call the 
+`classifySex` function.
+
+```{r}
+sex <- classifySex(allcounts2, genome="Hs", qc=FALSE)
+table(sex$prediction)
+```
+
+The cell lines were all derived from females, so the sex of the cells is 
+correctly classified as female.

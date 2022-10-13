@@ -1,0 +1,19 @@
+Package: cellXY
+Type: Package
+Title: Machine learning models for predicting sex labels for single cell RNA-seq data
+Version: 0.99.0
+Date: 2022-09-08
+Authors@R: 
+  c(person(given = "Melody",
+           family = "Jin",
+           role = c("aut", "cre"),
+           email = "Melody-Jin@outlook.com")
+    )
+Depends: R (>= 4.2.0)
+Imports: scuttle, stringr, AnnotationDbi, org.Hs.eg.db, org.Mm.eg.db, stats, grDevices, graphics, speckle, ggplot2, SingleCellExperiment
+VignetteBuilder: knitr
+Suggests: knitr, rmarkdown, CellBench, scater, patchwork
+Description: The cellXY package contains functions for predicting sex labels for single cell RNA sequencing data.
+License: GPL-3
+biocViews: SingleCell 
+RoxygenNote: 7.2.1
