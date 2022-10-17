@@ -27,13 +27,6 @@ library(edgeR)
 library(AnnotationDbi)
 library(org.Hs.eg.db)
 
-# find male-female doublet cells 
-
-
-
-# sex label prediction 
-
-
 ```
 
 We are using single cell data from the `r BiocStyle::Biocpkg("CellBench")` 

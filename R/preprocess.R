@@ -1,3 +1,4 @@
+
 #' Pre-processing function for sex classification
 #'
 #' The purpose of this function is to process a single cell counts matrix into
@@ -106,25 +107,6 @@ preprocess<- function(x, genome=genome, qc=qc){
   cm.new["superX", ] <-colSums(x[Xgene.set,])
   cm.new["superY", ] <-colSums(x[Ygene.set,])
 
-  #  if (genome == "Mm"){
-  #    ann <- suppressWarnings(AnnotationDbi::select(org.Mm.eg.db,
-  #                                   keys=str_to_title(row.names(x)),
-  #                                   columns=c("SYMBOL","GENENAME","CHR"),
-  #                                  keytype="SYMBOL"))
-  #  }else{
-  #    ann <- suppressWarnings(AnnotationDbi::select(org.Hs.eg.db,
-  #                                   keys=row.names(x),
-  #                                   columns=c("SYMBOL","GENENAME","CHR"),
-  #                                   keytype="SYMBOL"))
-  #  }
-  #  # create  superY.all
-  #  Ychr.genes<- toupper(unique(ann[which(ann$CHR=="Y"), "SYMBOL"]))
-  #  missing <- setdiff(Ychr.genes, row.names(x))
-  #  if (length(missing) >0){
-  #    Ychr.genes <- Ychr.genes[-match(missing, Ychr.genes)]
-  #  }
-  #  cm.new["superY.all", ] <- colSums(x[Ychr.genes,])
-
   ############################################################################
   # Pre-processing
   # perform simple QC
@@ -148,19 +130,22 @@ preprocess<- function(x, genome=genome, qc=qc){
   #Do Not Classify
   zero.cells <- NA
   dnc <- tcm.final$superY==0 & tcm.final$superX==0
+
   if(any(dnc)==TRUE){
     zero.cells <- row.names(tcm.final)[dnc]
     message(length(zero.cells), "cell/s are unable to be classified
-                due to an abundance of zeroes on X and Y chromosome genes\n")
+              due to an abundance of zeroes on X and Y chromosome genes\n")
   }
   tcm.final <- tcm.final[!dnc, ]
 
   cm.new <- cm.new[,!dnc]
+
   cm.lib.size<- colSums(x[,colnames(cm.new)], na.rm=TRUE)
 
   # log-normalisation performed for each cell
   # scaling performed for each gene
-  normsca.cm <- normSca(cm.new, lib.size=cm.lib.size)
+  normsca.cm <- data.frame(lognormCounts(cm.new, log = TRUE,
+                                         prior.count = 0.5,lib.size=cm.lib.size))
   data.df <- t(normsca.cm)
   data.df <- as.data.frame(data.df)
 
