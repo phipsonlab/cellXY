@@ -7,15 +7,6 @@
 The cellXY package currently contains trained models to classify cells as male or 
 female and to predict whether a cell is a male-female doublet or not. 
 
-The propeller function performs statistical tests for differences in cell
-type composition in single cell data. In order to test for differences in cell
-type proportions between multiple experimental conditions at least one of the 
-groups must have some form of biological replication (i.e. at least two 
-samples). For a two group scenario, the absolute minimum sample size is thus 
-three. Since there are many technical aspects which can affect cell type 
-proportion estimates, having biological replication is essential for a 
-meaningful analysis.
-
 The propeller function takes a SingleCellExperiment or Seurat object as input,
 extracts the relevant cell information, and tests whether the cell type 
 proportions are statistically significantly different between experimental
@@ -53,7 +44,7 @@ devtools::install_github("phipsonlab/cellXY")
 
 ## Sex label prediction example 
 
-This is a basic example which shows you how to obtain a sex label preidction for each cell. 
+This is a basic example which shows you how to obtain a sex label prediction for each cell. 
 
 ``` r
 library(speckle)
@@ -75,11 +66,4 @@ sex <- classifySex(counts, genome="Hs")
 table(sex$prediction)
 boxplot(counts["XIST",]~sex$prediction)
 ```
-Please note that this basic implementation is for when you are only modelling
-group information. When you have additional covariates that you would like to 
-account for, please use the propeller.ttest() and propeller.anova() functions
-directly. Please read the vignette for examples on how to model a continuous 
-variable, account for additional covariates and include a random effect in the 
-analysis. 
-
 

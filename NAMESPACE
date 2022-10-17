@@ -3,6 +3,7 @@
 export(classifySex)
 export(findMfDoublet)
 export(preprocess)
+export(preprocessDb)
 importFrom(AnnotationDbi,select)
 importFrom(org.Hs.eg.db,org.Hs.eg.db)
 importFrom(org.Mm.eg.db,org.Mm.eg.db)

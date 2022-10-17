@@ -60,7 +60,7 @@ findMfDoublet<-function(x, genome=NULL, qc = FALSE)
     genome <- match.arg(genome,c("Hs","Mm"))
 
     # pre-process
-    processed.data<-preprocess(x, genome = genome, qc = FALSE)
+    processed.data<-preprocessDb(x, genome = genome, qc = FALSE)
 
     # the processed transposed count matrix
     tcm <-processed.data$tcm.final
