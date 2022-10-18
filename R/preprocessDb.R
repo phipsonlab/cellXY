@@ -112,8 +112,6 @@ preprocessDb<- function(x, genome=genome, qc=qc){
 
   cm.lib.size<- colSums(x[,colnames(cm.new)], na.rm=TRUE)
   med.ls = median(cm.lib.size)
-
-
   # log-normalisation performed for each cell
   # scaling performed for each gene
   normsca.cm <- data.frame(lognormCounts(cm.new, log = TRUE,
@@ -122,6 +120,7 @@ preprocessDb<- function(x, genome=genome, qc=qc){
   data.df <- as.data.frame(data.df)
   data.df$med.ls = cm.lib.size/med.ls
   tcm.final$med.ls = cm.lib.size/med.ls
+  row.names(data_df) = row.names(tcm.final)
 
   list(tcm.final=tcm.final, data.df=data.df, discarded.cells=discarded.cells)
 }
