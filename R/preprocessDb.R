@@ -120,7 +120,7 @@ preprocessDb<- function(x, genome=genome, qc=qc){
   data.df <- as.data.frame(data.df)
   data.df$med.ls = cm.lib.size/med.ls
   tcm.final$med.ls = cm.lib.size/med.ls
-  row.names(data_df) = row.names(tcm.final)
+  row.names(data.df) = row.names(tcm.final)
 
   list(tcm.final=tcm.final, data.df=data.df, discarded.cells=discarded.cells)
 }
