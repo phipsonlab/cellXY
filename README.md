@@ -7,12 +7,9 @@
 The cellXY package currently contains trained models to classify cells as male or 
 female and to predict whether a cell is a male-female doublet or not. 
 
-The propeller function takes a SingleCellExperiment or Seurat object as input,
-extracts the relevant cell information, and tests whether the cell type 
-proportions are statistically significantly different between experimental
-conditions/groups. The user can also explicitly pass the cluster, sample and 
-experimental group information to propeller. P-values and false discovery rates 
-are outputted for each cell type. 
+The classifySex function takes a count matrix as input, computes required features and predict the sex label of each cell with the trained model. We have trained models for human and mouse cells seperately, and you need to specify the genome type of your data. 
+Similarly, the findMfDoublet function uses trained machine learning models to identify 
+male-female doublet cells in the dataset. 
 
 ## Installation
 

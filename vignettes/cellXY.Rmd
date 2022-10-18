@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
+
 ```{r setup}
 library(cellXY)
 library(speckle)
@@ -39,25 +40,6 @@ DropSeq.
 sc_data <- load_sc_data()
 ```
 
-The way that `propeller` is designed to be used is in the context of a designed 
-experiment where there are multiple biological replicates and multiple groups. 
-Comparing cell type proportions without biological replication should be done 
-with caution as there will be a large degree of variability in the cell type 
-proportions between samples due to technical factors (cell capture bias, 
-sampling, clustering errors), as well as biological variability. The 
-`r BiocStyle::Biocpkg("CellBench")` dataset does not have biological 
-replication, so we will create several artificial biological replicates by 
-bootstrapping the data. Bootstrapping has the advantage that it induces 
-variability between bootstrap samples by sampling with replacement. Here we will
-treat the three technologies as the groups, and create artifical biological 
-replicates within each group. Note that bootstrapping only induces sampling 
-variability between our biological replicates, which will almost certainly be 
-much smaller than biological variability we would expect to see in a real 
-dataset.
-
-The three single cell experiment objects in `sc_data` all have differing numbers
-of genes. The first step is to find all the common genes between all three 
-experiments in order to create one large dataset.
 
 ```{r}
 commongenes1 <- rownames(sc_data$sc_dropseq)[rownames(sc_data$sc_dropseq) %in% 
@@ -73,15 +55,6 @@ table(rownames(sce_10x) == rownames(sce_celseq))
 table(rownames(sce_10x) == rownames(sce_dropseq))
 ```
 
-# Bootstrap additional samples
-
-This dataset does not have any biological replicates, so we will bootstrap 
-additional samples and pretend that they are biological replicates. 
-Bootstrapping won't replicate true biological variation between samples, but we 
-will ignore that for the purpose of demonstrating how `propeller` works. Note 
-that we don't need to simulate gene expression measurements; `propeller` only 
-uses cluster information, hence we simply bootstrap the column indices of the 
-single cell count matrices.
 
 ```{r}
 i.10x <- seq_len(ncol(sce_10x))
@@ -95,11 +68,6 @@ sce_10x_rep2 <- sce_10x[,boot.10x]
 sce_celseq_rep2 <- sce_celseq[,boot.celseq]
 sce_dropseq_rep2 <- sce_dropseq[,boot.dropseq]
 ```
-
-# Combine all SingleCellExperiment objects
-
-The `SingleCellExperiment` objects don't combine very easily, so I will create a
-new object manually, and retain only the information needed to run `propeller`.
 
 ```{r}
 sample <- rep(c("S1","S2","S3","S4","S5","S6"), 
@@ -167,7 +135,6 @@ table(duplicated(rownames(allcounts2)))
 
 Now that the counts matrix is in the correct format we can call the 
 `classifySex` function.
-
 ```{r}
 sex <- classifySex(allcounts2, genome="Hs", qc=FALSE)
 table(sex$prediction)
