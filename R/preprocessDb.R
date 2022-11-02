@@ -76,10 +76,17 @@ preprocessDb<- function(x, genome=genome, qc=qc){
   if ("XIST" %in% row.names(x)) {
     cm.new["XIST", ]<- x["XIST", ]
   }else{
+
     cm.new["XIST", ]<- 0
   }
-  cm.new["superX", ] <-colSums(x[Xgene.set,])
-  cm.new["superY", ] <-colSums(x[Ygene.set,])
+
+  if (length(Xgene.set)>0){
+    cm.new["superX", ] <-colSums(x[Xgene.set,,drop = FALSE])
+  }
+  if (length(Xgene.set)>0){
+    cm.new["superY", ] <-colSums(x[Ygene.set,,drop = FALSE])
+  }
+
 
   ############################################################################
   # Pre-processing
