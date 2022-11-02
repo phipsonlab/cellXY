@@ -103,7 +103,12 @@ preprocess<- function(x, genome=genome, qc=qc){
   cm.new<-as.data.frame(matrix(rep(0, 3*ncol(x)), ncol = ncol(x),nrow = 3))
   row.names(cm.new) <- c("XIST","superX","superY")
   colnames(cm.new) <- colnames(x)
-  cm.new["XIST", ]<- x["XIST", ]
+
+  if ("XIST" %in% row.names(x)) {
+    cm.new["XIST", ]<- x["XIST", ]
+  }else{
+    cm.new["XIST", ]<- 0
+  }
   cm.new["superX", ] <-colSums(x[Xgene.set,])
   cm.new["superY", ] <-colSums(x[Ygene.set,])
 
