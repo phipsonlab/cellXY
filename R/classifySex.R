@@ -95,8 +95,7 @@ classifySex<-function(x, genome=NULL, qc = TRUE)
   # load trained models
   if(genome == "Mm"){
     model <- Mm_model
-  }
-  else{
+  }else{
     model <- Hs_model
   }
 

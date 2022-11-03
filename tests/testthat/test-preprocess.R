@@ -24,7 +24,7 @@ test_cm = as.data.frame(matrix(sample(0:20, size=100, replace = TRUE),
 row.names(test_cm) = c("XIST","ARSD","DAZ1","DDX3Y","EIF2S3")
 colnames(test_cm) = paste(rep("cell", ncol(test_cm)),colnames(test_cm),
                             sep="_")
-test_result =preprocess(x=test_cm, genome="Hs",qc=FALSE)
+test_result = preprocess(x=test_cm, genome="Hs",qc=FALSE)
 
 test_that("transposed count matrix with superX/superY count", {
   exp_result = as.data.frame(matrix(0, nrow=ncol(test_cm),ncol=3))

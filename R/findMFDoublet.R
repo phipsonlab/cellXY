@@ -81,8 +81,7 @@ findMfDoublet<-function(x, genome=NULL, qc = FALSE)
     # load trained models
     if(genome == "Mm"){
         model <- Mm_db_model
-    }
-    else{
+    }else{
         model <- Hs_db_model
     }
 

@@ -12,8 +12,18 @@ Authors@R:
 Depends: R (>= 4.2.0)
 Imports: scuttle, stringr, AnnotationDbi, org.Hs.eg.db, org.Mm.eg.db, stats
 VignetteBuilder: knitr
-Suggests: knitr, rmarkdown, CellBench, scater, patchwork, SingleCellExperiment, speckle
+Suggests: 
+    knitr,
+    rmarkdown,
+    CellBench,
+    scater,
+    patchwork,
+    SingleCellExperiment,
+    speckle,
+    caret,
+    testthat (>= 3.0.0)
 Description: The cellXY package contains functions for predicting sex labels for single cell RNA sequencing data.
 License: GPL-3
 biocViews: SingleCell 
 RoxygenNote: 7.2.1
+Config/testthat/edition: 3
