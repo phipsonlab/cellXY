@@ -89,6 +89,6 @@ findMfDoublet<-function(x, genome=NULL, qc = FALSE)
     preds <- predict(model, newdata = data.df)
     final.pred[row.names(data.df), "prediction"]<- as.character(preds)
 
-    final.pred
+    return(final.pred)
 }
 

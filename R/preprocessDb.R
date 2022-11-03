@@ -133,5 +133,5 @@ preprocessDb<- function(x, genome=genome, qc=qc){
   tcm.final$med.ls = cm.lib.size/med.ls
   row.names(data.df) = row.names(tcm.final)
 
-  list(tcm.final=tcm.final, data.df=data.df, discarded.cells=discarded.cells)
+  return(list(tcm.final=tcm.final, data.df=data.df, discarded.cells=discarded.cells))
 }

@@ -25,8 +25,9 @@ lognormCounts <- function(x, log = TRUE, prior.count = 0.5, lib.size)
   if(log){
     prior.count.scaled <- lib.size/mean(lib.size)*prior.count
     lib.size <- lib.size + 2*prior.count.scaled
-    log2(t((t(x)+prior.count.scaled)/lib.size*M))
+    return(log2(t((t(x)+prior.count.scaled)/lib.size*M)))
+  }else{
+    return(t(t(x)/lib.size*M))
   }
-  else t(t(x)/lib.size*M)
 }
 

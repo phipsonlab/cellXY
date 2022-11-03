@@ -161,6 +161,6 @@ preprocess<- function(x, genome=genome, qc=qc){
   data.df <- t(normsca.cm)
   data.df <- as.data.frame(data.df)
   row.names(data.df) = row.names(tcm.final)
-  list(tcm.final=tcm.final, data.df=data.df, discarded.cells=discarded.cells,
-       zero.cells=zero.cells)
+  return(list(tcm.final=tcm.final, data.df=data.df, discarded.cells=discarded.cells,
+       zero.cells=zero.cells))
 }
