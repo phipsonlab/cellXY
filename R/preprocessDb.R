@@ -95,9 +95,8 @@ preprocessDb<- function(x, genome=genome, qc=qc){
   discarded.cells <- NA
   if (qc == TRUE){
     #data.sce <-SingleCellExperiment(assays = list(counts = x))
-    qcstats <- scuttle::perCellQCMetrics(x,subsets=list(Mito=1:100))
-    qcfilter <- scuttle::quickPerCellQC(qcstats,
-                                        percent_subsets=c("subsets_Mito_percent"))
+    qcstats <- scuttle::perCellQCMetrics(x)
+    qcfilter <- scuttle::perCellQCFilters(qcstats)
     # save the discarded cells
     discarded.cells <- colnames(x[,qcfilter$discard])
 
