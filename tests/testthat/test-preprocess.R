@@ -18,8 +18,8 @@ Ygenes<-c("AMELY", "DAZ1", "PRKY", "RBMY1A1", "RBMY1HP", "RPS4Y1", "SRY",
           "CDY2B", "TXLNGY","CDY1B", "DAZ3", "DAZ2", "DAZ4")
 
 ###############################
-set.seed(5755)
-test_cm = as.data.frame(matrix(sample(0:20, size=100, replace = TRUE),
+set.seed(1478)
+test_cm = as.data.frame(matrix(sample(0:50, size=100, replace = TRUE),
                                  nrow=5, ncol=20))
 row.names(test_cm) = c("XIST","ARSD","DAZ1","DDX3Y","EIF2S3")
 colnames(test_cm) = paste(rep("cell", ncol(test_cm)),colnames(test_cm),
@@ -72,3 +72,14 @@ test_that("transposed count matrix with no superX count", {
   expect_equal(test_result$tcm.final, exp_result)
 })
 
+###############################
+set.seed(1457)
+test_cm = as.data.frame(matrix(sample(0:20, size=100, replace = TRUE),
+                               nrow=5, ncol=20))
+row.names(test_cm) = c("XIST","ARSD","FAM9C","CA5BP1","EIF2S3")
+colnames(test_cm) = c(paste(rep("cell",15),seq(1,15),sep=""),c(rep("cell8",times=5)))
+
+test_that("expecte message for duplicated cells name", {
+
+  expect_message(preprocess(x=test_cm, genome="Hs",qc=FALSE))
+})

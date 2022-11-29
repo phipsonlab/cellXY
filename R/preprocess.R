@@ -74,6 +74,11 @@ preprocess<- function(x, genome=genome, qc=qc){
 
   x <- as.matrix(x)
   row.names(x)<- toupper(row.names(x))
+
+  if (length(unique(colnames(x))) != ncol(x)){
+    message("Cell names are missing/duplicated. Cells are renamed to cell1 - cell", ncol(x))
+    colnames(x) = paste(rep("cell", ncol(x)), seq(1, ncol(x)), sep="")
+  }
   # genes located in the X chromosome that have been reported to escape
   # X-inactivation
   # http://bioinf.wehi.edu.au/software/GenderGenes/index.html
@@ -106,8 +111,8 @@ preprocess<- function(x, genome=genome, qc=qc){
 
   if ("XIST" %in% row.names(x)) {
     cm.new["XIST", ]<- x["XIST", ]
-  
   }else{
+
     cm.new["XIST", ]<- 0
   }
 

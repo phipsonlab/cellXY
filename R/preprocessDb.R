@@ -1,8 +1,8 @@
 
-#' Pre-processing function for sex classification
+#' Pre-processing function for Male/Female doublet detection
 #'
 #' The purpose of this function is to process a single cell counts matrix into
-#' the appropriate format for the \code{classifySex} function.
+#' the appropriate format for the \code{findMFDoublet} function.
 #'
 #' This function will filter out cells that are unable to be classified due to
 #' zero counts on *XIST/Xist* and all of the Y chromosome genes. If
@@ -12,7 +12,7 @@
 #' and scaled.
 #'
 #' @param x the counts matrix, rows are genes and columns are cells. Row names
-#' must be gene symbols.
+#' must be gene symbols and column names must be unique.
 #' @param genome the genome the data arises from. Current options are
 #' human: genome = "Hs" or mouse: genome = "Mm".
 #' @param qc logical, indicates whether to perform additional quality control
@@ -31,12 +31,9 @@
 #' be classified as male/female due to zero counts on *Xist* and all the
 #' Y chromosome genes.}
 #'
-#' @importFrom AnnotationDbi select
 #' @importFrom stringr str_to_title
 #' @importFrom scuttle perCellQCMetrics
 #' @importFrom scuttle quickPerCellQC
-#' @importFrom org.Hs.eg.db org.Hs.eg.db
-#' @importFrom org.Mm.eg.db org.Mm.eg.db
 #' @export preprocessDb
 #'
 
@@ -44,6 +41,12 @@ preprocessDb<- function(x, genome=genome, qc=qc){
 
   x <- as.matrix(x)
   row.names(x)<- toupper(row.names(x))
+
+  if (length(unique(colnames(x))) != ncol(x)){
+    message("Cell names are missing/duplicated. Cells are renamed to cell1 - cell", ncol(x))
+    colnames(x) = paste(rep("cell", ncol(x)), seq(1, ncol(x)), sep="")
+  }
+
   # genes located in the X chromosome that have been reported to escape
   # X-inactivation
   # http://bioinf.wehi.edu.au/software/GenderGenes/index.html
