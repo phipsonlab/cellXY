@@ -21,9 +21,14 @@ Suggests:
     SingleCellExperiment,
     speckle,
     caret,
+    vdiffr,
+    jsonlite,
+    scRNAseq,
+    reshape2,
+    ggplot2,
     testthat (>= 3.0.0)
 Description: The cellXY package contains functions for predicting sex labels for single cell RNA sequencing data.
 License: GPL-3
 biocViews: SingleCell 
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.2
 Config/testthat/edition: 3
