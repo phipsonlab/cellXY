@@ -2,13 +2,13 @@
 % Please edit documentation in R/preprocessDb.R
 \name{preprocessDb}
 \alias{preprocessDb}
-\title{Pre-processing function for sex classification}
+\title{Pre-processing function for Male/Female doublet detection}
 \usage{
 preprocessDb(x, genome = genome, qc = qc)
 }
 \arguments{
 \item{x}{the counts matrix, rows are genes and columns are cells. Row names
-must be gene symbols.}
+must be gene symbols and column names must be unique.}
 
 \item{genome}{the genome the data arises from. Current options are
 human: genome = "Hs" or mouse: genome = "Mm".}
@@ -32,7 +32,7 @@ Y chromosome genes.}
 }
 \description{
 The purpose of this function is to process a single cell counts matrix into
-the appropriate format for the \code{classifySex} function.
+the appropriate format for the \code{findMFDoublet} function.
 }
 \details{
 This function will filter out cells that are unable to be classified due to
