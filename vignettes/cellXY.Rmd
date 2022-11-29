@@ -1,10 +1,20 @@
 ---
+author: "Melody Jin"
 title: "cellXY"
-output: rmarkdown::html_vignette
+date: "`r BiocStyle::doc_date()`"
+package: "`r BiocStyle::pkg_ver('cellXY')`"
 vignette: >
-  %\VignetteIndexEntry{cellXY}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+    %\VignetteEncoding{UTF-8}
+    %\VignetteIndexEntry{cellXY}
+    %\VignetteEngine{knitr::rmarkdown}
+output: >
+    BiocStyle::html_document
+html_document:
+    fig_caption: yes
+    fig_retina: FALSE
+    keep_md: FALSE
+editor_options: 
+    chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
@@ -14,131 +24,118 @@ knitr::opts_chunk$set(
 )
 ```
 
-
 ```{r setup}
 library(cellXY)
-library(speckle)
 library(SingleCellExperiment)
-library(CellBench)
-library(limma)
 library(ggplot2)
-library(scater)
-library(patchwork)
-library(edgeR)
-library(AnnotationDbi)
-library(org.Hs.eg.db)
-
+library(scRNAseq)
+library(reshape2)
 ```
 
-We are using single cell data from the `r BiocStyle::Biocpkg("CellBench")` 
-package to illustrate how `propeller` works. This is an artificial dataset that 
-is made up of an equal mixture of 3 different cell lines. There are three 
-datasets corresponding to three different technologies: 10x genomics, CelSeq and
-DropSeq.
+We will use MarquesBrainData from the scRNAseq package to illustrate how to use functions in cellXY. There are 5069 cells from 4 samples. We can see that 1060 cells are Female, 1560 cells are M, and the sex information for the remaining cells are unknown.
+
+# Load the data
+```{r}
+sce <- MarquesBrainData()
+
+table(sce$Sex)
+```
+
+We can find Male/Female doublets by calling the `findMFDoublet` function.
+
+# Find Male/Female doublets
 
 ```{r}
-sc_data <- load_sc_data()
+db_pred =findMfDoublet(x=counts(sce),genome="Mm")
+db_pred$sex = sce$Sex
+print(table(db_pred$prediction, db_pred$sex))
 ```
 
+We identify 485 Male/Female doublets in this dataset. Most of the selected doublets do not have a known sex label. If you want to see the distribution of features used for finding those doublets, you can call `preprocessDb` which will give you a list with two data frames. Each data frame will have rows as cells and columns as features. One data frame contains the raw count values, and the other data frame contains the normalised count.
 
 ```{r}
-commongenes1 <- rownames(sc_data$sc_dropseq)[rownames(sc_data$sc_dropseq) %in% 
-                                                rownames(sc_data$sc_celseq)]
-commongenes2 <-  commongenes1[commongenes1 %in% rownames(sc_data$sc_10x)]
-sce_10x <- sc_data$sc_10x[commongenes2,]
-sce_celseq <- sc_data$sc_celseq[commongenes2,] 
-sce_dropseq <- sc_data$sc_dropseq[commongenes2,] 
-dim(sce_10x)
-dim(sce_celseq)
-dim(sce_dropseq)
-table(rownames(sce_10x) == rownames(sce_celseq))
-table(rownames(sce_10x) == rownames(sce_dropseq))
+
+prep_db_lst = preprocessDb(x=counts(sce),genome="Mm",qc = FALSE)
+# normalised features
+df_ps = prep_db_lst$data.df
+# raw count of features 
+tcm_ps = prep_db_lst$tcm.final
+
+vis_df = df_ps
+colnames(df_ps)[4]="libsize"
+df_ps$prediction = db_pred$prediction
+df_ps$sample = db_pred$sex
+vis_df = reshape2::melt(df_ps, id.vars =c("prediction","sample"), variable.name ="type")
+vis_df$prediction = factor(vis_df$prediction)
+vis_df$sex = factor(vis_df$sample)
+vis_df$type = factor(vis_df$type)
+
+
+ggplot(data = vis_df, aes(x=type, y=value, fill=prediction)) +
+  facet_wrap(~sample, ncol=4)+
+  #geom_violin(scale="width")+
+  geom_boxplot(outlier.shape = NA)+
+  geom_point(position=position_jitterdodge(jitter.width=0.3, jitter.height=0), 
+             size=0.05,  alpha=0.9)+
+  scale_fill_manual(values=c("#BC80BD","#4DAF4A"), name="")+
+
+  theme_bw()+
+    theme(legend.title=element_text(size=10),
+        axis.title.x=element_text(size=10),
+        axis.title.y=element_text(size=10), 
+        panel.spacing = unit(0.3, "lines"), 
+        legend.position="top",
+        legend.text=element_text(margin=ggplot2::margin(r=0.3,unit="cm"), size=18),
+        strip.text = element_text(size = rel(1.3)))+
+  xlab("")+ylab(expression(log[2]~"normalised count"))
+
 ```
 
+Then we can predict the sex labels for those singlets by calling `classifySex` function. 
+# Predict sex labels for singlets
+```{r}
+
+sce_s = colnames(counts(sce))[db_pred$prediction=="Singlet"]
+
+sc_pred=classifySex(x=counts(sce)[, sce_s],genome="Mm", qc=TRUE)
+table(sc_pred$prediction)
+
+sc_pred$sex = sce$Sex[match(sce_s, colnames(sce))]
+table(sc_pred)
+```
+
+We identify 1735 female cells and 2813 male cells. We can not classify one cell and pick another 17 cells as low-quality cells. Thus there are 18 overall cells that are labelled as NA. If you want to see the distribution of features used for predicting the sex labels, you can call `preprocess`, which will give you a list with two data frames. Each data frame will have rows as cells and columns as features. One data frame contains the raw count values, and the other data frame contains the normalised count.
 
 ```{r}
-i.10x <- seq_len(ncol(sce_10x))
-i.celseq <- seq_len(ncol(sce_celseq))
-i.dropseq <- seq_len(ncol(sce_dropseq))
-set.seed(10)
-boot.10x <- sample(i.10x, replace=TRUE)
-boot.celseq <- sample(i.celseq, replace=TRUE)
-boot.dropseq <- sample(i.dropseq, replace=TRUE)
-sce_10x_rep2 <- sce_10x[,boot.10x]
-sce_celseq_rep2 <- sce_celseq[,boot.celseq]
-sce_dropseq_rep2 <- sce_dropseq[,boot.dropseq]
-```
 
-```{r}
-sample <- rep(c("S1","S2","S3","S4","S5","S6"), 
-                c(ncol(sce_10x),ncol(sce_10x_rep2),ncol(sce_celseq),
-                ncol(sce_celseq_rep2), 
-                ncol(sce_dropseq),ncol(sce_dropseq_rep2)))
-cluster <- c(sce_10x$cell_line,sce_10x_rep2$cell_line,sce_celseq$cell_line,
-                sce_celseq_rep2$cell_line,sce_dropseq$cell_line,
-                sce_dropseq_rep2$cell_line)
-group <- rep(c("10x","celseq","dropseq"),
-                c(2*ncol(sce_10x),2*ncol(sce_celseq),2*ncol(sce_dropseq)))
-allcounts <- cbind(counts(sce_10x),counts(sce_10x_rep2), 
-                    counts(sce_celseq), counts(sce_celseq_rep2),
-                    counts(sce_dropseq), counts(sce_dropseq_rep2))
-sce_all <- SingleCellExperiment(assays = list(counts = allcounts))
-sce_all$sample <- sample
-sce_all$group <- group
-sce_all$cluster <- cluster
-```
+prep_sc_lst = preprocess(x=counts(sce)[, sce_s],genome="Mm",qc = FALSE)
+# normalised features
+df_ps = prep_sc_lst$data.df[sce_s,]
+# raw count of features 
+tcm_ps = prep_sc_lst$tcm.final[sce_s,]
 
-# Classifying male and female cells from scRNA-seq data
-A common quality control check in bulk RNA-seq is to check the sex of the 
-samples. The simplest method to do this is to check expression of *XIST*, which 
-is the gene responsible for X-inactivation. It is highly expressed in females, 
-and not expressed in males. In experiments where the sex of the samples has not 
-been recorded, the variation due to sex can often be captured by the top 
-principal component in an MDS or PCA plot. It is important to know if the 
-samples are a mix of males and females and to take this information 
-into account in downstream analysis.
-It turns out that for single cell data, it is not a simple matter to classify
-cells as male or female. The main reason for this is that the cells are
-much more lowly sequenced compared to bulk RNA-seq samples resulting in low or 
-zero counts for many genes, including *XIST* and other X- and Y-chromosome 
-genes. Thus simply trying to classify cells as male or female based on observed 
-counts for *XIST* leave many cells unable to be classified.
-There are a few reasons for wanting to classify male and female cells. First, it
-could form part of the analysis assessing quality of the cells, and if sex is 
-not information that is easily available, it is an additional variable we can 
-predict from the gene expression. This may then inform further analysis of the 
-data, by allowing us to take sex into account in the analysis.
-We have built a classifier to predict the sex of each cell based on logistic 
-regression for human and mouse cells. The input is the matrix of counts where
-the genes are the rows and the cells are the columns. The rownames of the counts
-matrix needs to be gene symbol. The `allcounts` data object contains the counts
-for all the cells used in the `propeller` function, but the rownames are ENSEMBL
-IDs. The first step is thus converting the ENSEMBL IDs to gene symbol.
-```{r}
-allcounts[1:5,1:5]
-nc <- normCounts(allcounts, log=TRUE)
-avgexp <- rowMeans(nc)
-o <- order(avgexp, decreasing = TRUE)
-allcounts2 <- allcounts[o,]
-allcounts2[1:5,1:5]
-ann <- AnnotationDbi::select(org.Hs.eg.db, keys=rownames(allcounts2),
-                columns=c("ENSEMBL","SYMBOL"), keytype="ENSEMBL")
-m <- match(rownames(allcounts2), ann$ENSEMBL)
-symbol <- ann$SYMBOL[m]
-table(duplicated(symbol))
-allcounts2 <- allcounts2[!duplicated(symbol) & !is.na(symbol),]
-rownames(allcounts2) <- symbol[!duplicated(symbol) & !is.na(symbol)]
-table(duplicated(colnames(allcounts2)))
-colnames(allcounts2) <- paste(colnames(allcounts2),1:ncol(allcounts2), sep=".")
-table(duplicated(rownames(allcounts2)))
-```
+vis_df = df_ps
+df_ps$prediction = sc_pred$prediction
+df_ps$sample = sc_pred$sex
+vis_df = reshape2::melt(df_ps, id.vars =c("prediction","sample"), variable.name ="type")
+vis_df$prediction = factor(vis_df$prediction)
+vis_df$sex = factor(vis_df$sample)
+vis_df$type = factor(vis_df$type)
 
-Now that the counts matrix is in the correct format we can call the 
-`classifySex` function.
-```{r}
-sex <- classifySex(allcounts2, genome="Hs", qc=FALSE)
-table(sex$prediction)
-```
+ggplot(data = vis_df[vis_df$prediction!="NA", ], aes(x=type, y=value, fill=prediction)) +
+  facet_wrap(~sample, ncol=4)+
+  geom_boxplot(outlier.shape = NA)+
+  geom_point(position=position_jitterdodge(jitter.width=0.6, jitter.height=0), 
+             size=0.1,  alpha=0.9)+
+  scale_fill_manual(values=c("#FFB900FF","#5773CCFF"), name="")+
+  theme_bw()+
+  theme(legend.title=element_text(size=10),
+        axis.title.x=element_text(size=10),
+        axis.title.y=element_text(size=10), 
+        panel.spacing = unit(0.3, "lines"), 
+        legend.position="top",
+        legend.text=element_text(margin=ggplot2::margin(r=0.3,unit="cm"), size=18),
+        strip.text = element_text(size = rel(1.3)))+
+  xlab("")+ylab(expression(log[2]~"normalised count"))
 
-The cell lines were all derived from females, so the sex of the cells is 
-correctly classified as female.
+```
