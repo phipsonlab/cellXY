@@ -73,9 +73,8 @@ vis_df$type = factor(vis_df$type)
 
 ggplot(data = vis_df, aes(x=type, y=value, fill=prediction)) +
   facet_wrap(~sample, ncol=4)+
-  #geom_violin(scale="width")+
   geom_boxplot(outlier.shape = NA)+
-  geom_point(position=position_jitterdodge(jitter.width=0.3, jitter.height=0), 
+  geom_point(position=position_jitterdodge(jitter.width=0.3, jitter.height=0),
              size=0.05,  alpha=0.9)+
   scale_fill_manual(values=c("#BC80BD","#4DAF4A"), name="")+
 
