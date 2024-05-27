@@ -1,5 +1,5 @@
 
-# cellXY
+# cellXY      [![DOI](https://zenodo.org/badge/535519225.svg)](https://zenodo.org/doi/10.5281/zenodo.11329594)
 
 <!-- badges: start -->
 <!-- badges: end -->
