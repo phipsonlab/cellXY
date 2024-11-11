@@ -28,7 +28,7 @@
 #' library(SingleCellExperiment)
 #' library(CellBench)
 #' library(org.Hs.eg.db)
-#'
+#' library(randomForest)
 #' sc_data <- load_sc_data()
 #' sc_10x <- sc_data$sc_10x
 #'
