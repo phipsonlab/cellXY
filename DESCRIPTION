@@ -31,4 +31,5 @@ Description: The cellXY package contains functions for predicting sex labels for
 License: GPL-3
 biocViews: SingleCell 
 RoxygenNote: 7.3.2
+Encoding: UTF-8
 Config/testthat/edition: 3
