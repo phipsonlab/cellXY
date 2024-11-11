@@ -46,3 +46,16 @@ test_that("cm with counts on superY only", {
   row.names(exp_result) = colnames(cm_male)
   expect_identical(result_male, exp_result)
 })
+
+###############################
+# count matrix with high counts on superY and no counts on superX
+wrong_cm <-  as.data.frame(matrix(10, ncol=100, nrow=length(Ygenes)))
+
+row.names(wrong_cm) <- NULL
+# make sure the column (cell) names are unique
+colnames(wrong_cm) <- paste("cell", 1:ncol(wrong_cm), sep="_")
+
+test_that("Invalid input", {
+    expect_error(classifySex(x=wrong_cm, genome = "Mm"))
+})
+

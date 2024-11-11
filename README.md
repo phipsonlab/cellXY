@@ -48,7 +48,7 @@ library(speckle)
 library(SingleCellExperiment)
 library(CellBench)
 library(org.Hs.eg.db)
-
+library(scRNAseq)
 sc_data <- load_sc_data()
 sc_10x <- sc_data$sc_10x
 
@@ -62,5 +62,17 @@ sex <- classifySex(counts, genome="Hs")
 
 table(sex$prediction)
 boxplot(counts["XIST",]~sex$prediction)
+
+
+# Mouse data example 
+sce <- fetchDataset("zilionis-lung-2019", "2023-12-20", path="mouse")
+mouse_cm <- counts(sce)
+# make sure the row names are the gene symbols
+row.names(mouse_cm) <- row.names(sce)
+# make sure the column (cell) names are unique
+colnames(mouse_cm) <- paste("cell", 1:ncol(sce), sep="_")
+
+mouse_pred <- classifySex(mouse_cm, genome="Mm")
+table(mouse_pred$prediction)
 ```
 

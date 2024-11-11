@@ -30,5 +30,5 @@ Suggests:
 Description: The cellXY package contains functions for predicting sex labels for single cell RNA sequencing data.
 License: GPL-3
 biocViews: SingleCell 
-RoxygenNote: 7.2.2
+RoxygenNote: 7.3.2
 Config/testthat/edition: 3
