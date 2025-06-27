@@ -19,7 +19,7 @@ lognormCounts <- function(x, log = TRUE, prior.count = 0.5, lib.size)
   # Belinda Phipson
   # 26 February 2020
 {
-  x <- as.matrix(x)
+#  x <- as.matrix(x)
   #lib.size <- colSums(x)
   M <- median(lib.size)
   if(log){

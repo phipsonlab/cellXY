@@ -50,7 +50,7 @@ findMfDoublet<-function(x, genome=NULL, qc = FALSE)
 {
     # Perform some checks on the data
     if (is.null(x)) stop("Counts matrix missing")
-    x <- as.matrix(x)
+#    x <- as.matrix(x)
 
     if (is.null(genome)){
         message("Genome not specified. Human genome used. Options are 'Hs' for

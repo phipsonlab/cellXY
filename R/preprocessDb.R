@@ -39,7 +39,7 @@
 
 preprocessDb<- function(x, genome=genome, qc=qc){
 
-  x <- as.matrix(x)
+#  x <- as.matrix(x)
   row.names(x)<- toupper(row.names(x))
 
   if (length(unique(colnames(x))) != ncol(x)){
